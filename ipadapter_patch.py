@@ -33,11 +33,11 @@ def apply_ipadapter(
         allow_patterns=[f"{encoder_subfolder}/*"]
     ) + f"/{encoder_subfolder}"
 
-pipe.load_ip_adapter(
-    pretrained_model_name_or_path_or_dict="h94/IP-Adapter",
-    subfolder="models",
-    weight_name=ip_ckpt
-)
+    pipe.load_ip_adapter(
+        pretrained_model_name_or_path_or_dict="h94/IP-Adapter",
+        subfolder="models",
+        weight_name=ip_ckpt
+    )
 
 
 
