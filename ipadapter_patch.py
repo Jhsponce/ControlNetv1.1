@@ -4,9 +4,6 @@ import torch
 from diffusers import StableDiffusionControlNetPipeline
 from huggingface_hub import snapshot_download
 
-from ip_adapter.ip_adapter import IPAdapter  # Make sure this path matches your local clone
-
-
 def apply_ipadapter(
     pipe: StableDiffusionControlNetPipeline,
     ip_ckpt: str = "ip-adapter_sd15.bin",
