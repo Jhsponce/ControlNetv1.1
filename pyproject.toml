@@ -1,0 +1,58 @@
+[project]
+name = "controlnet-v1-1"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "accelerate>=1.2.1",
+    "controlnet-aux>=0.0.9",
+    "diffusers>=0.32.1",
+    "einops>=0.8.0",
+    "gradio>=5.12.0",
+    "hf-transfer>=0.1.9",
+    "mediapipe>=0.10.18",
+    "opencv-python-headless>=4.10.0.84",
+    "safetensors>=0.5.2",
+    "spaces>=0.32.0",
+    "torch==2.4.0",
+    "torchvision>=0.19.0",
+    "transformers>=4.48.0",
+    "xformers>=0.0.27.post2",
+]
+
+[tool.ruff]
+line-length = 119
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812", # missing-trailing-comma
+    "D203",   # one-blank-line-before-class
+    "D213",   # multi-line-summary-second-line
+    "E501",   # line-too-long
+    "SIM117", # multiple-with-statements
+]
+extend-ignore = [
+    "D100",    # undocumented-public-module
+    "D101",    # undocumented-public-class
+    "D102",    # undocumented-public-method
+    "D103",    # undocumented-public-function
+    "D104",    # undocumented-public-package
+    "D105",    # undocumented-magic-method
+    "D107",    # undocumented-public-init
+    "EM101",   # raw-string-in-exception
+    "FBT001",  # boolean-type-hint-positional-argument
+    "FBT002",  # boolean-default-value-positional-argument
+    "PD901",   # pandas-df-variable-name
+    "PGH003",  # blanket-type-ignore
+    "PLR0913", # too-many-arguments
+    "PLR0915", # too-many-statements
+    "TRY003",  # raise-vanilla-args
+]
+unfixable = [
+    "F401", # unused-import
+]
+
+[tool.ruff.format]
+docstring-code-format = true
