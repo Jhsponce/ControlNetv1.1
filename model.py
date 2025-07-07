@@ -1,5 +1,5 @@
 import gc
-
+from typing import Optional
 import numpy as np
 import PIL.Image
 import torch
