@@ -17,7 +17,7 @@ def create_demo(process):
         with gr.Row():
             with gr.Column():
                 image = gr.Image()
-                reference_image = gr.Image(type="pil", label="Reference Image (Style)", optional=True)
+                reference_image = gr.Image(type="pil", label="Reference Image (optional, for style)")
                 prompt = gr.Textbox(label="Prompt", submit_btn=True)
                 with gr.Accordion("Advanced options", open=False):
                     num_samples = gr.Slider(
