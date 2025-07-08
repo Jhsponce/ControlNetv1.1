@@ -132,9 +132,13 @@ class Model:
 
         if reference_image is not None:
             pipe_args["ip_adapter_image"] = reference_image
+        else:
+            pipe_args["added_cond_kwargs"] = {}  #  Prevent NoneType crash
+
 
         # Only passes ip_adapter_image if it's valid
         return self.pipe(**pipe_args).images
+        
 
     @torch.inference_mode()
     def process_canny(
