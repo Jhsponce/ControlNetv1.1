@@ -30,11 +30,6 @@ def create_demo(process):
                         value=DEFAULT_IMAGE_RESOLUTION,
                         step=256,
                     )
-                    apply_style = gr.Checkbox(
-                        label="Apply reference style",
-                        value=True,  # Default to enabled
-                        interactive=True
-                    )
                     canny_low_threshold = gr.Slider(
                         label="Canny low threshold", minimum=1, maximum=255, value=100, step=1
                     )
@@ -65,7 +60,6 @@ def create_demo(process):
             seed,
             canny_low_threshold,
             canny_high_threshold,
-            apply_style,
         ]
         prompt.submit(
             fn=randomize_seed_fn,
