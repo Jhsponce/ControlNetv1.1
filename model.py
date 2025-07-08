@@ -119,36 +119,16 @@ class Model:
         reference_image: Optional[PIL.Image.Image] = None,
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
-        # Patch the UNet state before calling the pipeline
-        if hasattr(self.pipe, "unet"):
-            if not hasattr(self.pipe.unet, "added_cond_kwargs") or self.pipe.unet.added_cond_kwargs is None:
-                self.pipe.unet.added_cond_kwargs = {}
-
-
-        pipe_args = {
-            "prompt": prompt,
-            "negative_prompt": negative_prompt,
-            "guidance_scale": guidance_scale,
-            "num_images_per_prompt": num_images,
-            "num_inference_steps": num_steps,
-            "generator": generator,
-            "image": control_image,
-        }
-
-        try:
-            # Try full pipeline with IPAdapter
-            return self.pipe(**pipe_args).images
-
-        except TypeError as e:
-            if "added_cond_kwargs" in str(e) or "NoneType" in str(e):
-                print("Reference conditioning failed — falling back to sketch-only pipeline.")
-                pipe_args.pop("ip_adapter_image", None)
-                pipe_args["added_cond_kwargs"] = {}  # ensure safe fallback
-                return self.pipe(**pipe_args).images
-            else:
-                raise  # re-raise other unexpected errors
-
-        
+        return self.pipe(
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            guidance_scale=guidance_scale,
+            num_images_per_prompt=num_images,
+            num_inference_steps=num_steps,
+            generator=generator,
+            image=control_image,
+            ip_adapter_image=reference_image,
+        ).images
 
     @torch.inference_mode()
     def process_canny(
