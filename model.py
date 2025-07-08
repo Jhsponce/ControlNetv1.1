@@ -41,26 +41,38 @@ def download_all_controlnet_weights() -> None:
 
 class Model:
     def __init__(
-        self,
-        base_model_id: str = "stable-diffusion-v1-5/stable-diffusion-v1-5",task_name: str = "Canny"
+        self, base_model_id: str = "stable-diffusion-v1-5/stable-diffusion-v1-5", task_name: str = "Canny"
     ) -> None:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.base_model_id = base_model_id
-        self.task_name = task_name
-        self.pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=True)   # With reference support
-        self.plain_pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=False)  # Sketch-only fallback
+        self.base_model_id = ""
+        self.task_name = ""
+        self.pipe_with_adapter = self.load_pipe(base_model_id, task_name, use_ip_adapter=True)
+        self.pipe_plain = self.load_pipe(base_model_id, task_name, use_ip_adapter=False)
+        self.pipe = self.load_pipe(base_model_id, task_name)
         self.preprocessor = Preprocessor()
-        
-    def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True):
+
+   def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True) -> DiffusionPipeline:
+        if (
+            base_model_id == self.base_model_id
+            and task_name == self.task_name
+            and hasattr(self, "pipe")
+            and self.pipe is not None
+            and use_ip_adapter  # Only reuse if it's the styled pipeline
+        ):
+            return self.pipe
+
         model_id = CONTROLNET_MODEL_IDS[task_name]
 
-        controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
+        controlnet = ControlNetModel.from_pretrained(
+            model_id,
+            torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
+        )
 
         pipe = StableDiffusionControlNetPipeline.from_pretrained(
             base_model_id,
-            controlnet=controlnet,
-            torch_dtype=torch.float16,
             safety_checker=None,
+            controlnet=controlnet,
+            torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
         )
 
         pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
@@ -71,17 +83,18 @@ class Model:
         pipe.to(self.device)
 
         if use_ip_adapter:
-            pipe.load_ip_adapter(
-                ip_adapter_model_path="models/ip_adapter.bin",
-                image_encoder_path="models/image_encoder",
-            )
+            pipe = apply_ipadapter(pipe, device=self.device)
 
         torch.cuda.empty_cache()
         gc.collect()
 
-        return pipe
+        if use_ip_adapter:
+            self.base_model_id = base_model_id
+            self.task_name = task_name
+            self.pipe = pipe
 
-        self.pipe = apply_ipadapter(self.pipe, device=self.device)
+        return pipe
+  
 
 
     def set_base_model(self, base_model_id: str) -> str:
@@ -125,9 +138,10 @@ class Model:
         guidance_scale: float,
         seed: int,
         reference_image: Optional[PIL.Image.Image] = None,
-        use_style: bool = True,  # Optional toggle if you wire a checkbox later
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
+
+        pipe = self.pipe if reference_image is not None else self.plain_pipe
 
         pipe_args = {
             "prompt": prompt,
@@ -139,14 +153,10 @@ class Model:
             "image": control_image,
         }
 
-        if reference_image is not None and use_style:
+        if reference_image is not None:
             pipe_args["ip_adapter_image"] = reference_image
-            pipe_to_use = self.pipe  # Styled pipe
-        else:
-            print("No reference image or styling disabled — using sketch-only pipe.")
-            pipe_to_use = self.plain_pipe  # Pipe with no IPAdapter injected
 
-        return pipe_to_use(**pipe_args).images
+        return pipe(**pipe_args).images
 
 
     @torch.inference_mode()
@@ -164,7 +174,6 @@ class Model:
         seed: int,
         low_threshold: int,
         high_threshold: int,
-        apply_style,
     ) -> list[PIL.Image.Image]:
         if image is None:
             raise ValueError
@@ -188,7 +197,6 @@ class Model:
             guidance_scale=guidance_scale,
             seed=seed,
             reference_image=reference_image,
-            use_style=apply_style,
         )
         return [control_image, *results]
 
