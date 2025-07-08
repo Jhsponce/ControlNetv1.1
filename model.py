@@ -52,21 +52,21 @@ class Model:
         self.preprocessor = Preprocessor()
         
     def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True):
-    pipe = StableDiffusionControlNetPipeline.from_pretrained(
-        base_model_id,
-        controlnet=controlnet_map[task_name],
-        torch_dtype=torch.float16,
-        safety_checker=None,
-    ).to(self.device)
+        pipe = StableDiffusionControlNetPipeline.from_pretrained(
+            base_model_id,
+            controlnet=controlnet_map[task_name],
+            torch_dtype=torch.float16,
+            safety_checker=None,
+        ).to(self.device)
 
-    if use_ip_adapter:
-        # Style conditioning setup
-        pipe.load_ip_adapter(
-            ip_adapter_model_path="models/ip_adapter.bin",
-            image_encoder_path="models/image_encoder",
-        )
+        if use_ip_adapter:
+            # Style conditioning setup
+            pipe.load_ip_adapter(
+                ip_adapter_model_path="models/ip_adapter.bin",
+                image_encoder_path="models/image_encoder",
+            )
 
-    return pipe
+        return pipe
 
         model_id = CONTROLNET_MODEL_IDS[task_name]
         controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
