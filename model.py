@@ -42,20 +42,15 @@ def download_all_controlnet_weights() -> None:
 class Model:
     def __init__(
         self,
-        base_model_id: str = "stable-diffusion-v1-5/stable-diffusion-v1-5",
-        task_name: str = "Canny"
+        base_model_id: str = "stable-diffusion-v1-5/stable-diffusion-v1-5",task_name: str = "Canny"
     ) -> None:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.base_model_id = base_model_id
         self.task_name = task_name
-
-        # Load both pipelines on startup
         self.pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=True)   # With reference support
         self.plain_pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=False)  # Sketch-only fallback
-
         self.preprocessor = Preprocessor()
-
-
+        
     def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True):
     pipe = StableDiffusionControlNetPipeline.from_pretrained(
         base_model_id,
