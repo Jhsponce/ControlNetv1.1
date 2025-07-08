@@ -117,7 +117,7 @@ class Model:
     def get_prompt(self, prompt: str, additional_prompt: str) -> str:
         return additional_prompt if not prompt else f"{prompt}, {additional_prompt}"
 
-   @torch.autocast("cuda")
+    @torch.autocast("cuda")
     def run_pipe(
         self,
         prompt: str,
