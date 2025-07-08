@@ -132,9 +132,7 @@ class Model:
 
         if reference_image is not None:
             pipe_args["ip_adapter_image"] = reference_image
-        else:
-            self.pipe.set_ip_adapter_image(None)  # Optional: clears any previous state
-
+  
         return self.pipe(**pipe_args).images
 
 
