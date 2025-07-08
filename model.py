@@ -52,36 +52,33 @@ class Model:
         self.preprocessor = Preprocessor()
         
     def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True):
+        model_id = CONTROLNET_MODEL_IDS[task_name]
+
+        controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
+
         pipe = StableDiffusionControlNetPipeline.from_pretrained(
             base_model_id,
-            controlnet=controlnet_map[task_name],
+            controlnet=controlnet,
             torch_dtype=torch.float16,
             safety_checker=None,
-        ).to(self.device)
+        )
+
+        pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
+
+        if self.device.type == "cuda":
+            pipe.enable_xformers_memory_efficient_attention()
+
+        pipe.to(self.device)
 
         if use_ip_adapter:
-            # Style conditioning setup
             pipe.load_ip_adapter(
                 ip_adapter_model_path="models/ip_adapter.bin",
                 image_encoder_path="models/image_encoder",
             )
 
-        return pipe
-
-        model_id = CONTROLNET_MODEL_IDS[task_name]
-        controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
-        pipe = StableDiffusionControlNetPipeline.from_pretrained(
-            base_model_id, safety_checker=None, controlnet=controlnet, torch_dtype=torch.float16
-        )
-        pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
-        if self.device.type == "cuda":
-            pipe.enable_xformers_memory_efficient_attention()
-        pipe.to(self.device)
-        pipe = apply_ipadapter(pipe, device=self.device)
         torch.cuda.empty_cache()
         gc.collect()
-        self.base_model_id = base_model_id
-        self.task_name = task_name
+
         return pipe
 
         self.pipe = apply_ipadapter(self.pipe, device=self.device)
