@@ -106,40 +106,40 @@ class Model:
     def get_prompt(self, prompt: str, additional_prompt: str) -> str:
         return additional_prompt if not prompt else f"{prompt}, {additional_prompt}"
 
-   @torch.autocast("cuda")
-def run_pipe(
-    self,
-    prompt: str,
-    negative_prompt: str,
-    control_image: PIL.Image.Image,
-    num_images: int,
-    num_steps: int,
-    guidance_scale: float,
-    seed: int,
-    reference_image: Optional[PIL.Image.Image] = None,
-) -> list[PIL.Image.Image]:
-    generator = torch.Generator().manual_seed(seed)
+    @torch.autocast("cuda")
+    def run_pipe(
+        self,
+        prompt: str,
+        negative_prompt: str,
+        control_image: PIL.Image.Image,
+        num_images: int,
+        num_steps: int,
+        guidance_scale: float,
+        seed: int,
+        reference_image: Optional[PIL.Image.Image] = None,
+    ) -> list[PIL.Image.Image]:
+        generator = torch.Generator().manual_seed(seed)
 
-    # Construct pipeline arguments
-    pipe_args = {
-        "prompt": prompt,
-        "negative_prompt": negative_prompt,
-        "guidance_scale": guidance_scale,
-        "num_images_per_prompt": num_images,
-        "num_inference_steps": num_steps,
-        "generator": generator,
-        "image": control_image,
-    }
+        # Construct pipeline arguments
+        pipe_args = {
+            "prompt": prompt,
+            "negative_prompt": negative_prompt,
+            "guidance_scale": guidance_scale,
+            "num_images_per_prompt": num_images,
+            "num_inference_steps": num_steps,
+            "generator": generator,
+            "image": control_image,
+        }
 
-    # Only pass ip_adapter_image if reference is present
-    if reference_image is not None:
-        pipe_args["ip_adapter_image"] = reference_image
-    else:
-        pipe_args["added_cond_kwargs"] = {}  # Prevent crash if style conditioning is skipped
-        print("No reference image provided — sketch-only pipeline running.")
+        # Only pass ip_adapter_image if reference is present
+        if reference_image is not None:
+            pipe_args["ip_adapter_image"] = reference_image
+        else:
+            pipe_args["added_cond_kwargs"] = {}  # Prevent crash if style conditioning is skipped
+            print("No reference image provided — sketch-only pipeline running.")
 
-    #  Run pipeline safely
-    return self.pipe(**pipe_args).images
+        #  Run pipeline safely
+        return self.pipe(**pipe_args).images
 
         
 
