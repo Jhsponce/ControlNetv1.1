@@ -119,6 +119,11 @@ class Model:
         reference_image: Optional[PIL.Image.Image] = None,
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
+        # Patch the UNet state before calling the pipeline
+        if hasattr(self.pipe, "unet"):
+            if not hasattr(self.pipe.unet, "added_cond_kwargs") or self.pipe.unet.added_cond_kwargs is None:
+                self.pipe.unet.added_cond_kwargs = {}
+
 
         pipe_args = {
             "prompt": prompt,
@@ -130,14 +135,19 @@ class Model:
             "image": control_image,
         }
 
-        if reference_image is not None:
-            pipe_args["ip_adapter_image"] = reference_image
-        else:
-            pipe_args["added_cond_kwargs"] = {}  #  Prevent NoneType crash
+        try:
+            # Try full pipeline with IPAdapter
+            return self.pipe(**pipe_args).images
 
+        except TypeError as e:
+            if "added_cond_kwargs" in str(e) or "NoneType" in str(e):
+                print("Reference conditioning failed — falling back to sketch-only pipeline.")
+                pipe_args.pop("ip_adapter_image", None)
+                pipe_args["added_cond_kwargs"] = {}  # ensure safe fallback
+                return self.pipe(**pipe_args).images
+            else:
+                raise  # re-raise other unexpected errors
 
-        # Only passes ip_adapter_image if it's valid
-        return self.pipe(**pipe_args).images
         
 
     @torch.inference_mode()
