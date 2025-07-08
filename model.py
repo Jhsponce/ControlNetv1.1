@@ -47,9 +47,10 @@ class Model:
         self.base_model_id = ""
         self.task_name = ""
         self.pipe_with_adapter = self.load_pipe(base_model_id, task_name, use_ip_adapter=True)
-        self.pipe_plain = self.load_pipe(base_model_id, task_name, use_ip_adapter=False)
-        self.pipe = self.load_pipe(base_model_id, task_name)
+        self.pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=True)
+        self.plain_pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=False)
         self.preprocessor = Preprocessor()
+        
 
     def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True) -> DiffusionPipeline:
             if (
