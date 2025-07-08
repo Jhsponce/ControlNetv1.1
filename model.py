@@ -119,16 +119,24 @@ class Model:
         reference_image: Optional[PIL.Image.Image] = None,
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
-        return self.pipe(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            guidance_scale=guidance_scale,
-            num_images_per_prompt=num_images,
-            num_inference_steps=num_steps,
-            generator=generator,
-            image=control_image,
-            ip_adapter_image=reference_image,
-        ).images
+
+        pipe_args = {
+            "prompt": prompt,
+            "negative_prompt": negative_prompt,
+            "guidance_scale": guidance_scale,
+            "num_images_per_prompt": num_images,
+            "num_inference_steps": num_steps,
+            "generator": generator,
+            "image": control_image,
+        }
+
+        if reference_image is not None:
+            pipe_args["ip_adapter_image"] = reference_image
+        else:
+            self.pipe.set_ip_adapter_image(None)  # Optional: clears any previous state
+
+        return self.pipe(**pipe_args).images
+
 
     @torch.inference_mode()
     def process_canny(
