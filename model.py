@@ -41,22 +41,38 @@ def download_all_controlnet_weights() -> None:
 
 class Model:
     def __init__(
-        self, base_model_id: str = "stable-diffusion-v1-5/stable-diffusion-v1-5", task_name: str = "Canny"
+        self,
+        base_model_id: str = "stable-diffusion-v1-5/stable-diffusion-v1-5",
+        task_name: str = "Canny"
     ) -> None:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.base_model_id = ""
-        self.task_name = ""
-        self.pipe = self.load_pipe(base_model_id, task_name)
+        self.base_model_id = base_model_id
+        self.task_name = task_name
+
+        # Load both pipelines on startup
+        self.pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=True)   # With reference support
+        self.plain_pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=False)  # Sketch-only fallback
+
         self.preprocessor = Preprocessor()
 
-    def load_pipe(self, base_model_id: str, task_name: str) -> DiffusionPipeline:
-        if (
-            base_model_id == self.base_model_id
-            and task_name == self.task_name
-            and hasattr(self, "pipe")
-            and self.pipe is not None
-        ):
-            return self.pipe
+
+    def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True):
+    pipe = StableDiffusionControlNetPipeline.from_pretrained(
+        base_model_id,
+        controlnet=controlnet_map[task_name],
+        torch_dtype=torch.float16,
+        safety_checker=None,
+    ).to(self.device)
+
+    if use_ip_adapter:
+        # Style conditioning setup
+        pipe.load_ip_adapter(
+            ip_adapter_model_path="models/ip_adapter.bin",
+            image_encoder_path="models/image_encoder",
+        )
+
+    return pipe
+
         model_id = CONTROLNET_MODEL_IDS[task_name]
         controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
         pipe = StableDiffusionControlNetPipeline.from_pretrained(
@@ -106,7 +122,7 @@ class Model:
     def get_prompt(self, prompt: str, additional_prompt: str) -> str:
         return additional_prompt if not prompt else f"{prompt}, {additional_prompt}"
 
-    @torch.autocast("cuda")
+   @torch.autocast("cuda")
     def run_pipe(
         self,
         prompt: str,
@@ -117,18 +133,29 @@ class Model:
         guidance_scale: float,
         seed: int,
         reference_image: Optional[PIL.Image.Image] = None,
+        use_style: bool = True,  # Optional toggle if you wire a checkbox later
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
-        return self.pipe(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            guidance_scale=guidance_scale,
-            num_images_per_prompt=num_images,
-            num_inference_steps=num_steps,
-            generator=generator,
-            image=control_image,
-            ip_adapter_image=reference_image,
-        ).images
+
+        pipe_args = {
+            "prompt": prompt,
+            "negative_prompt": negative_prompt,
+            "guidance_scale": guidance_scale,
+            "num_images_per_prompt": num_images,
+            "num_inference_steps": num_steps,
+            "generator": generator,
+            "image": control_image,
+        }
+
+        if reference_image is not None and use_style:
+            pipe_args["ip_adapter_image"] = reference_image
+            pipe_to_use = self.pipe  # Styled pipe
+        else:
+            print("No reference image or styling disabled — using sketch-only pipe.")
+            pipe_to_use = self.plain_pipe  # Pipe with no IPAdapter injected
+
+        return pipe_to_use(**pipe_args).images
+
 
     @torch.inference_mode()
     def process_canny(
@@ -145,6 +172,7 @@ class Model:
         seed: int,
         low_threshold: int,
         high_threshold: int,
+        apply_style,
     ) -> list[PIL.Image.Image]:
         if image is None:
             raise ValueError
@@ -168,6 +196,7 @@ class Model:
             guidance_scale=guidance_scale,
             seed=seed,
             reference_image=reference_image,
+            use_style=apply_style,
         )
         return [control_image, *results]
 
