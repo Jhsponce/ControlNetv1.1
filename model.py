@@ -130,13 +130,11 @@ class Model:
             "image": control_image,
         }
 
-if reference_image is not None:
-    pipe_args["ip_adapter_image"] = reference_image
+        if reference_image is not None:
+            pipe_args["ip_adapter_image"] = reference_image
 
-# Only passes ip_adapter_image if it's valid
-return self.pipe(**pipe_args).images
-
-
+        # Only passes ip_adapter_image if it's valid
+        return self.pipe(**pipe_args).images
 
     @torch.inference_mode()
     def process_canny(
