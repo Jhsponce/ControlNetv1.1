@@ -47,21 +47,7 @@ class Model:
         self.base_model_id = base_model_id
         self.task_name = task_name
 
-        self.pipes = {
-            "Canny": {
-                "styled": self.load_pipe(base_model_id, "Canny", use_ip_adapter=True),
-                "plain": self.load_pipe(base_model_id, "Canny", use_ip_adapter=False),
-            },
-            "lineart": {
-                "styled": self.load_pipe(base_model_id, "lineart", use_ip_adapter=True),
-                "plain": self.load_pipe(base_model_id, "lineart", use_ip_adapter=False),
-            },
-            "lineart_anime": {
-                "styled": self.load_pipe(base_model_id, "lineart_anime", use_ip_adapter=True),
-                "plain": self.load_pipe(base_model_id, "lineart_anime", use_ip_adapter=False),
-            },
-            # Add more modes as needed
-        }
+        self.pipes: dict[str, dict[str, DiffusionPipeline]] = {}
 
         self.preprocessor = Preprocessor()
 
@@ -144,6 +130,13 @@ class Model:
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
 
+        # Lazy-load pipeline if not already cached
+        if task_name not in self.pipes:
+            self.pipes[task_name] = {
+                "styled": self.load_pipe(self.base_model_id, task_name, use_ip_adapter=True),
+                "plain": self.load_pipe(self.base_model_id, task_name, use_ip_adapter=False),
+            }
+
         pipe = self.pipes[task_name]["styled" if reference_image else "plain"]
 
         pipe_args = {
@@ -160,6 +153,7 @@ class Model:
             pipe_args["ip_adapter_image"] = reference_image
 
         return pipe(**pipe_args).images
+
 
 
     @torch.inference_mode()
