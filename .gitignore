@@ -162,3 +162,15 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# additional models
+app_depth.py
+app_shuffle.py
+app_mlsd.py
+app_softedge.py
+app_scribble_interactive.py
+app_ip2p.py
+app_scribble.py
+app_segmentation.py
+app_openpose.py
+app_normal.py

@@ -269,6 +269,7 @@ class Model:
     def process_mlsd(
         self,
         image: np.ndarray,
+        reference_image: np.ndarray,
         prompt: str,
         additional_prompt: str,
         negative_prompt: str,
@@ -320,6 +321,7 @@ class Model:
     def process_softedge(
         self,
         image: np.ndarray,
+        reference_image: np.ndarray,
         prompt: str,
         additional_prompt: str,
         negative_prompt: str,
@@ -457,6 +459,7 @@ class Model:
     def process_ip2p(
         self,
         image: np.ndarray,
+        reference_image: np.ndarray,
         prompt: str,
         additional_prompt: str,
         negative_prompt: str,
