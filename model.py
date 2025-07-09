@@ -385,70 +385,70 @@ class Model:
 
     @torch.inference_mode()
     def process_lineart(
-    self,
-    image: np.ndarray,
-    reference_image: np.ndarray,
-    prompt: str,
-    additional_prompt: str,
-    negative_prompt: str,
-    num_images: int,
-    image_resolution: int,
-    preprocess_resolution: int,
-    num_steps: int,
-    guidance_scale: float,
-    seed: int,
-    preprocessor_name: str,
-) -> list[PIL.Image.Image]:
-    if image is None:
-        raise ValueError
-    if image_resolution > MAX_IMAGE_RESOLUTION:
-        raise ValueError
-    if num_images > MAX_NUM_IMAGES:
-        raise ValueError
+        self,
+        image: np.ndarray,
+        reference_image: np.ndarray,
+        prompt: str,
+        additional_prompt: str,
+        negative_prompt: str,
+        num_images: int,
+        image_resolution: int,
+        preprocess_resolution: int,
+        num_steps: int,
+        guidance_scale: float,
+        seed: int,
+        preprocessor_name: str,
+    ) -> list[PIL.Image.Image]:
+        if image is None:
+            raise ValueError
+        if image_resolution > MAX_IMAGE_RESOLUTION:
+            raise ValueError
+        if num_images > MAX_NUM_IMAGES:
+            raise ValueError
 
-    task_name = "lineart_anime" if "anime" in preprocessor_name else "lineart"
+        task_name = "lineart_anime" if "anime" in preprocessor_name else "lineart"
 
-    if preprocessor_name in ["None", "None (anime)"]:
-        image = HWC3(image)
-        image = resize_image(image, resolution=image_resolution)
-        control_image = PIL.Image.fromarray(image)
-    elif preprocessor_name in ["Lineart", "Lineart coarse"]:
-        coarse = "coarse" in preprocessor_name
-        self.preprocessor.load("Lineart")
-        control_image = self.preprocessor(
-            image=image,
-            image_resolution=image_resolution,
-            detect_resolution=preprocess_resolution,
-            coarse=coarse,
+        if preprocessor_name in ["None", "None (anime)"]:
+            image = HWC3(image)
+            image = resize_image(image, resolution=image_resolution)
+            control_image = PIL.Image.fromarray(image)
+        elif preprocessor_name in ["Lineart", "Lineart coarse"]:
+            coarse = "coarse" in preprocessor_name
+            self.preprocessor.load("Lineart")
+            control_image = self.preprocessor(
+                image=image,
+                image_resolution=image_resolution,
+                detect_resolution=preprocess_resolution,
+                coarse=coarse,
+            )
+        elif preprocessor_name == "Lineart (anime)":
+            self.preprocessor.load("LineartAnime")
+            control_image = self.preprocessor(
+                image=image,
+                image_resolution=image_resolution,
+                detect_resolution=preprocess_resolution,
+            )
+
+        self.load_controlnet_weight(task_name)
+
+        results = self.run_pipe(
+            prompt=self.get_prompt(prompt, additional_prompt),
+            negative_prompt=negative_prompt,
+            control_image=control_image,
+            num_images=num_images,
+            num_steps=num_steps,
+            guidance_scale=guidance_scale,
+            seed=seed,
+            reference_image=reference_image,
+            task_name=task_name,
         )
-    elif preprocessor_name == "Lineart (anime)":
-        self.preprocessor.load("LineartAnime")
-        control_image = self.preprocessor(
-            image=image,
-            image_resolution=image_resolution,
-            detect_resolution=preprocess_resolution,
-        )
 
-    self.load_controlnet_weight(task_name)
+        if hasattr(self.preprocessor, "clear"):
+            self.preprocessor.clear()
 
-    results = self.run_pipe(
-        prompt=self.get_prompt(prompt, additional_prompt),
-        negative_prompt=negative_prompt,
-        control_image=control_image,
-        num_images=num_images,
-        num_steps=num_steps,
-        guidance_scale=guidance_scale,
-        seed=seed,
-        reference_image=reference_image,
-        task_name=task_name,
-    )
-
-    if hasattr(self.preprocessor, "clear"):
-        self.preprocessor.clear()
-
-    torch.cuda.empty_cache()
-    gc.collect()
-    return [control_image, *results]
+        torch.cuda.empty_cache()
+        gc.collect()
+        return [control_image, *results]
 
 
     
