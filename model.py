@@ -99,10 +99,10 @@ class Model:
         if task_name == self.task_name:
             return
         if task_name not in self.pipes:
-        self.pipes[task_name] = {
-            "styled": self.load_pipe(self.base_model_id, task_name, use_ip_adapter=True),
-            "plain": self.load_pipe(self.base_model_id, task_name, use_ip_adapter=False),
-        }
+            self.pipes[task_name] = {
+                "styled": self.load_pipe(self.base_model_id, task_name, use_ip_adapter=True),
+                "plain": self.load_pipe(self.base_model_id, task_name, use_ip_adapter=False),
+            }
 
         pipe = self.pipes[task_name]["styled"]
 
