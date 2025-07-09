@@ -110,20 +110,20 @@ class Model:
         return self.base_model_id
 
     def load_controlnet_weight(self, task_name: str) -> None:
-    if task_name == self.task_name:
-        return
-    pipe = self.pipes[task_name]["styled"]
-    if pipe is not None and hasattr(pipe, "controlnet"):
-        del pipe.controlnet
-    torch.cuda.empty_cache()
-    gc.collect()
-    model_id = CONTROLNET_MODEL_IDS[task_name]
-    controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
-    controlnet.to(self.device)
-    torch.cuda.empty_cache()
-    gc.collect()
-    pipe.controlnet = controlnet
-    self.task_name = task_name
+        if task_name == self.task_name:
+            return
+        pipe = self.pipes[task_name]["styled"]
+        if pipe is not None and hasattr(pipe, "controlnet"):
+            del pipe.controlnet
+        torch.cuda.empty_cache()
+        gc.collect()
+        model_id = CONTROLNET_MODEL_IDS[task_name]
+        controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
+        controlnet.to(self.device)
+        torch.cuda.empty_cache()
+        gc.collect()
+        pipe.controlnet = controlnet
+        self.task_name = task_name
 
 
     def get_prompt(self, prompt: str, additional_prompt: str) -> str:
