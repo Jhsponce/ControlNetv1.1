@@ -38,24 +38,10 @@ with gr.Blocks(css_paths="style.css") as demo:
             create_demo_canny(model.process_canny)
         with gr.Tab("MLSD"):
             create_demo_mlsd(model.process_mlsd)
-        with gr.Tab("Scribble"):
-            create_demo_scribble(model.process_scribble)
-        with gr.Tab("Scribble Interactive"):
-            create_demo_scribble_interactive(model.process_scribble_interactive)
         with gr.Tab("SoftEdge"):
             create_demo_softedge(model.process_softedge)
-        with gr.Tab("OpenPose"):
-            create_demo_openpose(model.process_openpose)
-        with gr.Tab("Segmentation"):
-            create_demo_segmentation(model.process_segmentation)
-        with gr.Tab("Depth"):
-            create_demo_depth(model.process_depth)
-        with gr.Tab("Normal map"):
-            create_demo_normal(model.process_normal)
         with gr.Tab("Lineart"):
             create_demo_lineart(model.process_lineart)
-        with gr.Tab("Content Shuffle"):
-            create_demo_shuffle(model.process_shuffle)
         with gr.Tab("Instruct Pix2Pix"):
             create_demo_ip2p(model.process_ip2p)
 
