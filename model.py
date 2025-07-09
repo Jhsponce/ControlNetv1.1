@@ -44,58 +44,57 @@ class Model:
         self, base_model_id: str = "stable-diffusion-v1-5/stable-diffusion-v1-5", task_name: str = "Canny"
     ) -> None:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.base_model_id = ""
-        self.task_name = ""
-        self.pipe_with_adapter = self.load_pipe(base_model_id, task_name, use_ip_adapter=True)
-        self.pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=True)
-        self.plain_pipe = self.load_pipe(base_model_id, task_name, use_ip_adapter=False)
+        self.base_model_id = base_model_id
+        self.task_name = task_name
+
+        self.pipes = {
+            "Canny": {
+                "styled": self.load_pipe(base_model_id, "Canny", use_ip_adapter=True),
+                "plain": self.load_pipe(base_model_id, "Canny", use_ip_adapter=False),
+            },
+            "lineart": {
+                "styled": self.load_pipe(base_model_id, "lineart", use_ip_adapter=True),
+                "plain": self.load_pipe(base_model_id, "lineart", use_ip_adapter=False),
+            },
+            "lineart_anime": {
+                "styled": self.load_pipe(base_model_id, "lineart_anime", use_ip_adapter=True),
+                "plain": self.load_pipe(base_model_id, "lineart_anime", use_ip_adapter=False),
+            },
+            # Add more modes as needed
+        }
+
         self.preprocessor = Preprocessor()
-        
 
     def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True) -> DiffusionPipeline:
-            if (
-                base_model_id == self.base_model_id
-                and task_name == self.task_name
-                and hasattr(self, "pipe")
-                and self.pipe is not None
-                and use_ip_adapter  # Only reuse if it's the styled pipeline
-            ):
-                return self.pipe
+        model_id = CONTROLNET_MODEL_IDS[task_name]
 
-            model_id = CONTROLNET_MODEL_IDS[task_name]
+        controlnet = ControlNetModel.from_pretrained(
+            model_id,
+            torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
+        )
 
-            controlnet = ControlNetModel.from_pretrained(
-                model_id,
-                torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
-            )
+        pipe = StableDiffusionControlNetPipeline.from_pretrained(
+            base_model_id,
+            safety_checker=None,
+            controlnet=controlnet,
+            torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
+        )
 
-            pipe = StableDiffusionControlNetPipeline.from_pretrained(
-                base_model_id,
-                safety_checker=None,
-                controlnet=controlnet,
-                torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
-            )
+        pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
 
-            pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
+        if self.device.type == "cuda":
+            pipe.enable_xformers_memory_efficient_attention()
 
-            if self.device.type == "cuda":
-                pipe.enable_xformers_memory_efficient_attention()
+        pipe.to(self.device)
 
-            pipe.to(self.device)
+        if use_ip_adapter:
+            pipe = apply_ipadapter(pipe, device=self.device)
 
-            if use_ip_adapter:
-                pipe = apply_ipadapter(pipe, device=self.device)
+        torch.cuda.empty_cache()
+        gc.collect()
 
-            torch.cuda.empty_cache()
-            gc.collect()
+        return pipe
 
-            if use_ip_adapter:
-                self.base_model_id = base_model_id
-                self.task_name = task_name
-                self.pipe = pipe
-
-            return pipe
-    
 
 
     def set_base_model(self, base_model_id: str) -> str:
@@ -142,7 +141,7 @@ class Model:
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
 
-        pipe = self.pipe if reference_image is not None else self.plain_pipe
+        pipe = self.pipes[task_name]["styled" if reference_image else "plain"]
 
         pipe_args = {
             "prompt": prompt,
