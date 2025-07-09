@@ -38,12 +38,8 @@ with gr.Blocks(css_paths="style.css") as demo:
             create_demo_canny(model.process_canny)
         with gr.Tab("MLSD"):
             create_demo_mlsd(model.process_mlsd)
-        with gr.Tab("SoftEdge"):
-            create_demo_softedge(model.process_softedge)
         with gr.Tab("Lineart"):
             create_demo_lineart(model.process_lineart)
-        with gr.Tab("Instruct Pix2Pix"):
-            create_demo_ip2p(model.process_ip2p)
 
     with gr.Accordion(label="Base model", open=False):
         with gr.Row():
