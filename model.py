@@ -140,8 +140,7 @@ class Model:
         guidance_scale: float,
         seed: int,
         reference_image: Optional[PIL.Image.Image] = None,
-        task_name: str = "Canny,
-        task_name="lineart"
+        task_name: str = "Canny",
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
 
