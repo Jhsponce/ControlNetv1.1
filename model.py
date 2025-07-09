@@ -47,7 +47,7 @@ class Model:
         self.base_model_id = base_model_id
         self.task_name = task_name
 
-        self.pipe = {
+        self.pipes = {
             "Canny": {
                 "styled": self.load_pipe(base_model_id, "Canny", use_ip_adapter=True),
                 "plain": self.load_pipe(base_model_id, "Canny", use_ip_adapter=False),
