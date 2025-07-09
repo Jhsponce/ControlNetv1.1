@@ -47,7 +47,7 @@ class Model:
         self.base_model_id = base_model_id
         self.task_name = task_name
 
-        self.pipes = {
+        self.pipe = {
             "Canny": {
                 "styled": self.load_pipe(base_model_id, "Canny", use_ip_adapter=True),
                 "plain": self.load_pipe(base_model_id, "Canny", use_ip_adapter=False),
@@ -110,19 +110,21 @@ class Model:
         return self.base_model_id
 
     def load_controlnet_weight(self, task_name: str) -> None:
-        if task_name == self.task_name:
-            return
-        if self.pipe is not None and hasattr(self.pipe, "controlnet"):
-            del self.pipe.controlnet
-        torch.cuda.empty_cache()
-        gc.collect()
-        model_id = CONTROLNET_MODEL_IDS[task_name]
-        controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
-        controlnet.to(self.device)
-        torch.cuda.empty_cache()
-        gc.collect()
-        self.pipe.controlnet = controlnet
-        self.task_name = task_name
+    if task_name == self.task_name:
+        return
+    pipe = self.pipes[task_name]["styled"]
+    if pipe is not None and hasattr(pipe, "controlnet"):
+        del pipe.controlnet
+    torch.cuda.empty_cache()
+    gc.collect()
+    model_id = CONTROLNET_MODEL_IDS[task_name]
+    controlnet = ControlNetModel.from_pretrained(model_id, torch_dtype=torch.float16)
+    controlnet.to(self.device)
+    torch.cuda.empty_cache()
+    gc.collect()
+    pipe.controlnet = controlnet
+    self.task_name = task_name
+
 
     def get_prompt(self, prompt: str, additional_prompt: str) -> str:
         return additional_prompt if not prompt else f"{prompt}, {additional_prompt}"
@@ -138,6 +140,8 @@ class Model:
         guidance_scale: float,
         seed: int,
         reference_image: Optional[PIL.Image.Image] = None,
+        task_name: str = "Canny,
+        task_name="lineart"
     ) -> list[PIL.Image.Image]:
         generator = torch.Generator().manual_seed(seed)
 
@@ -197,6 +201,7 @@ class Model:
             guidance_scale=guidance_scale,
             seed=seed,
             reference_image=reference_image,
+            task_name="Canny",
         )
         return [control_image, *results]
 
@@ -629,6 +634,7 @@ class Model:
             guidance_scale=guidance_scale,
             seed=seed,
             reference_image=reference_image,
+            task_name="lineart" if "anime" not in preprocessor_name else "lineart_anime",
         )
         return [control_image, *results]
 
