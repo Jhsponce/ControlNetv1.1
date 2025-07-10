@@ -51,7 +51,7 @@ with gr.Blocks(css_paths="style.css") as demo:
                 change_base_model_button = gr.Button("Change base model", interactive=ALLOW_CHANGING_BASE_MODEL)
         if not ALLOW_CHANGING_BASE_MODEL:
             gr.Markdown(
-                """The base model is not allowed to be changed in this Space so as not to slow down the demo, but it can be changed if you duplicate the Space."""
+                """The base model can be changed if you duplicate the Space."""
             )
 
     check_base_model_button.click(

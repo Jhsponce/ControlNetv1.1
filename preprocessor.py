@@ -10,6 +10,7 @@ import torch
 from controlnet_aux import (
     CannyDetector,
     LineartDetector,
+    LineartAnimeDetector,
     MLSDdetector,
 )
 from controlnet_aux.util import HWC3
@@ -31,6 +32,8 @@ class Preprocessor:
             self.model = MLSDdetector.from_pretrained(self.MODEL_ID)
         elif name == "Lineart":
             self.model = LineartDetector.from_pretrained(self.MODEL_ID)
+       elif name == "LineartAnime":
+            self.model = LineartAnimeDetector.from_pretrained(self.MODEL_ID)
         elif name == "Canny":
             self.model = CannyDetector()
         else:

@@ -43,10 +43,10 @@ def create_demo(process):
                     guidance_scale = gr.Slider(label="Guidance scale", minimum=0.1, maximum=30.0, value=9.0, step=0.1)
                     seed = gr.Slider(label="Seed", minimum=0, maximum=MAX_SEED, step=1, value=0)
                     randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
-                    a_prompt = gr.Textbox(label="Additional prompt", value="best quality, extremely detailed")
+                    a_prompt = gr.Textbox(label="Additional prompt", value="Best quality, extremely detailed, real life photography, real life textures, real life materials, wood, plaster, marble, stone, concrete, metal, glass, realistic lighting, photo style")
                     n_prompt = gr.Textbox(
                         label="Negative prompt",
-                        value="longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality",
+                        value="Extra windows, extra doors, distorted glass, fantasy rendering, watercolor, loose brushwork, illustration, incorrect perspective, people, vehicles, foliage overlap, lens flare, reflections in pavement, AI artifacts, duplicate elements, curved walls, irregular structures, sketch-like effects",
                     )
             with gr.Column():
                 result = gr.Gallery(label="Output", show_label=False, columns=2, object_fit="scale-down")
