@@ -4,17 +4,8 @@ import gradio as gr
 import torch
 
 from app_canny import create_demo as create_demo_canny
-from app_depth import create_demo as create_demo_depth
-from app_ip2p import create_demo as create_demo_ip2p
 from app_lineart import create_demo as create_demo_lineart
 from app_mlsd import create_demo as create_demo_mlsd
-from app_normal import create_demo as create_demo_normal
-from app_openpose import create_demo as create_demo_openpose
-from app_scribble import create_demo as create_demo_scribble
-from app_scribble_interactive import create_demo as create_demo_scribble_interactive
-from app_segmentation import create_demo as create_demo_segmentation
-from app_shuffle import create_demo as create_demo_shuffle
-from app_softedge import create_demo as create_demo_softedge
 from model import Model
 from settings import ALLOW_CHANGING_BASE_MODEL, DEFAULT_MODEL_ID, SHOW_DUPLICATE_BUTTON
 
