@@ -9,9 +9,15 @@ import PIL.Image
 import torch
 from controlnet_aux import (
     CannyDetector,
+    ContentShuffleDetector,
+    HEDdetector,
     LineartAnimeDetector,
     LineartDetector,
+    MidasDetector,
     MLSDdetector,
+    NormalBaeDetector,
+    OpenposeDetector,
+    PidiNetDetector,
 )
 from controlnet_aux.util import HWC3
 
@@ -30,14 +36,30 @@ class Preprocessor:
     def load(self, name: str) -> None:  # noqa: C901, PLR0912
         if name == self.name:
             return
+        if name == "HED":
+            self.model = HEDdetector.from_pretrained(self.MODEL_ID)
+        elif name == "Midas":
+            self.model = MidasDetector.from_pretrained(self.MODEL_ID)
         elif name == "MLSD":
             self.model = MLSDdetector.from_pretrained(self.MODEL_ID)
+        elif name == "Openpose":
+            self.model = OpenposeDetector.from_pretrained(self.MODEL_ID)
+        elif name == "PidiNet":
+            self.model = PidiNetDetector.from_pretrained(self.MODEL_ID)
+        elif name == "NormalBae":
+            self.model = NormalBaeDetector.from_pretrained(self.MODEL_ID)
         elif name == "Lineart":
             self.model = LineartDetector.from_pretrained(self.MODEL_ID)
         elif name == "LineartAnime":
             self.model = LineartAnimeDetector.from_pretrained(self.MODEL_ID)
         elif name == "Canny":
-            self.model = CannyDetector.from_pretrained(self.MODEL_ID)
+            self.model = CannyDetector()
+        elif name == "ContentShuffle":
+            self.model = ContentShuffleDetector()
+        elif name == "DPT":
+            self.model = DepthEstimator()
+        elif name == "UPerNet":
+            self.model = ImageSegmentor()
         else:
             raise ValueError
         torch.cuda.empty_cache()
