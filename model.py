@@ -23,7 +23,6 @@ CONTROLNET_MODEL_IDS = {
     "lineart": "lllyasviel/control_v11p_sd15_lineart",
     "lineart_anime": "lllyasviel/control_v11p_sd15s2_lineart_anime",
     "inpaint": "lllyasviel/control_v11e_sd15_inpaint",
-    "canny_lineart": "runwayml/stable-diffusion-v1-5"  # Shared base, used for multi-conditioning
 }
 
 
@@ -46,24 +45,13 @@ class Model:
         self.preprocessor = Preprocessor()
 
     def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True) -> DiffusionPipeline:
-    # Handle multi-ControlNet tasks like "canny_lineart"
-        if task_name == "canny_lineart":
-            controlnet_ids = [CONTROLNET_MODEL_IDS["Canny"], CONTROLNET_MODEL_IDS["lineart"]]
-            controlnet = [
-                ControlNetModel.from_pretrained(
-                    model_id,
-                    torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
-                )
-                for model_id in controlnet_ids
-            ]
-        else:
-            model_id = CONTROLNET_MODEL_IDS[task_name]
-            controlnet = ControlNetModel.from_pretrained(
-                model_id,
-                torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
-            )
+        model_id = CONTROLNET_MODEL_IDS[task_name]
 
-        # Load the pipeline with single or multiple ControlNets
+        controlnet = ControlNetModel.from_pretrained(
+            model_id,
+            torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
+        )
+
         pipe = StableDiffusionControlNetPipeline.from_pretrained(
             base_model_id,
             safety_checker=None,
@@ -85,7 +73,6 @@ class Model:
         gc.collect()
 
         return pipe
-
 
     def unload_pipe(self, task_name: str) -> None:
         if task_name in self.pipes:
@@ -394,64 +381,3 @@ class Model:
         torch.cuda.empty_cache()
         gc.collect()
         return [control_image, *results]
-
-    @torch.inference_mode()
-    def process_canny_lineart(
-        self,
-        image: np.ndarray,
-        reference_image: np.ndarray,
-        prompt: str,
-        additional_prompt: str,
-        negative_prompt: str,
-        num_images: int,
-        image_resolution: int,
-        preprocess_resolution: int,
-        num_steps: int,
-        guidance_scale: float,
-        seed: int,
-    ) -> list[PIL.Image.Image]:
-        if image is None:
-            raise ValueError
-        if image_resolution > MAX_IMAGE_RESOLUTION:
-            raise ValueError
-        if num_images > MAX_NUM_IMAGES:
-            raise ValueError
-
-        # Preprocess for Canny
-        self.preprocessor.load("Canny")
-        canny_img = self.preprocessor(
-            image=image,
-            low_threshold=100,
-            high_threshold=200,
-            detect_resolution=image_resolution
-        )
-
-        # Preprocess for Lineart
-        self.preprocessor.load("Lineart")
-        lineart_img = self.preprocessor(
-            image=image,
-            image_resolution=image_resolution,
-            detect_resolution=preprocess_resolution
-        )
-
-        self.load_controlnet_weight("canny_lineart")  # Optional, handled inside run_pipe if not loaded
-
-        results = self.run_pipe(
-            prompt=self.get_prompt(prompt, additional_prompt),
-            negative_prompt=negative_prompt,
-            control_image=[canny_img, lineart_img],  # Dual input
-            num_images=num_images,
-            num_steps=num_steps,
-            guidance_scale=guidance_scale,
-            seed=seed,
-            reference_image=reference_image,
-            task_name="canny_lineart"
-        )
-
-        if hasattr(self.preprocessor, "clear"):
-            self.preprocessor.clear()
-
-        torch.cuda.empty_cache()
-        gc.collect()
-        return [canny_img, lineart_img, *results]
-
