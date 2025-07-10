@@ -32,7 +32,7 @@ class Preprocessor:
             self.model = MLSDdetector.from_pretrained(self.MODEL_ID)
         elif name == "Lineart":
             self.model = LineartDetector.from_pretrained(self.MODEL_ID)
-       elif name == "LineartAnime":
+        elif name == "LineartAnime":
             self.model = LineartAnimeDetector.from_pretrained(self.MODEL_ID)
         elif name == "Canny":
             self.model = CannyDetector()
