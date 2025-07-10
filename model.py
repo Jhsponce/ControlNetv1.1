@@ -20,11 +20,10 @@ from ipadapter_patch import apply_ipadapter
 CONTROLNET_MODEL_IDS = {
     "Canny": "lllyasviel/control_v11p_sd15_canny",
     "MLSD": "lllyasviel/control_v11p_sd15_mlsd",
-    "softedge": "lllyasviel/control_v11p_sd15_softedge",
     "lineart": "lllyasviel/control_v11p_sd15_lineart",
     "lineart_anime": "lllyasviel/control_v11p_sd15s2_lineart_anime",
-    "ip2p": "lllyasviel/control_v11e_sd15_ip2p",
     "inpaint": "lllyasviel/control_v11e_sd15_inpaint",
+    "canny_lineart": "runwayml/stable-diffusion-v1-5"  # Shared base, used for multi-conditioning
 }
 
 
@@ -47,13 +46,24 @@ class Model:
         self.preprocessor = Preprocessor()
 
     def load_pipe(self, base_model_id: str, task_name: str, use_ip_adapter: bool = True) -> DiffusionPipeline:
-        model_id = CONTROLNET_MODEL_IDS[task_name]
+    # Handle multi-ControlNet tasks like "canny_lineart"
+        if task_name == "canny_lineart":
+            controlnet_ids = [CONTROLNET_MODEL_IDS["Canny"], CONTROLNET_MODEL_IDS["lineart"]]
+            controlnet = [
+                ControlNetModel.from_pretrained(
+                    model_id,
+                    torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
+                )
+                for model_id in controlnet_ids
+            ]
+        else:
+            model_id = CONTROLNET_MODEL_IDS[task_name]
+            controlnet = ControlNetModel.from_pretrained(
+                model_id,
+                torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
+            )
 
-        controlnet = ControlNetModel.from_pretrained(
-            model_id,
-            torch_dtype=torch.float32 if self.device.type == "cpu" else torch.float16
-        )
-
+        # Load the pipeline with single or multiple ControlNets
         pipe = StableDiffusionControlNetPipeline.from_pretrained(
             base_model_id,
             safety_checker=None,
@@ -75,6 +85,7 @@ class Model:
         gc.collect()
 
         return pipe
+
 
     def unload_pipe(self, task_name: str) -> None:
         if task_name in self.pipes:
@@ -318,74 +329,6 @@ class Model:
 
 
     @torch.inference_mode()
-    def process_softedge(
-        self,
-        image: np.ndarray,
-        reference_image: np.ndarray,
-        prompt: str,
-        additional_prompt: str,
-        negative_prompt: str,
-        num_images: int,
-        image_resolution: int,
-        preprocess_resolution: int,
-        num_steps: int,
-        guidance_scale: float,
-        seed: int,
-        preprocessor_name: str,
-    ) -> list[PIL.Image.Image]:
-        if image is None:
-            raise ValueError
-        if image_resolution > MAX_IMAGE_RESOLUTION:
-            raise ValueError
-        if num_images > MAX_NUM_IMAGES:
-            raise ValueError
-
-        if preprocessor_name == "None":
-            image = HWC3(image)
-            image = resize_image(image, resolution=image_resolution)
-            control_image = PIL.Image.fromarray(image)
-        elif preprocessor_name in ["HED", "HED safe"]:
-            safe = "safe" in preprocessor_name
-            self.preprocessor.load("HED")
-            control_image = self.preprocessor(
-                image=image,
-                image_resolution=image_resolution,
-                detect_resolution=preprocess_resolution,
-                scribble=safe,
-            )
-        elif preprocessor_name in ["PidiNet", "PidiNet safe"]:
-            safe = "safe" in preprocessor_name
-            self.preprocessor.load("PidiNet")
-            control_image = self.preprocessor(
-                image=image,
-                image_resolution=image_resolution,
-                detect_resolution=preprocess_resolution,
-                safe=safe,
-            )
-        else:
-            raise ValueError
-        self.load_controlnet_weight("softedge")
-        results = self.run_pipe(
-            prompt=self.get_prompt(prompt, additional_prompt),
-            negative_prompt=negative_prompt,
-            control_image=control_image,
-            num_images=num_images,
-            num_steps=num_steps,
-            guidance_scale=guidance_scale,
-            seed=seed,
-            reference_image=reference_image,
-            task_name="softedge",
-        )
-        if hasattr(self.preprocessor, "clear"):
-            self.preprocessor.clear()
-
-        torch.cuda.empty_cache()
-        gc.collect()
-        return [control_image, *results]
-
-
-
-    @torch.inference_mode()
     def process_lineart(
         self,
         image: np.ndarray,
@@ -452,11 +395,8 @@ class Model:
         gc.collect()
         return [control_image, *results]
 
-
-    
-
     @torch.inference_mode()
-    def process_ip2p(
+    def process_canny_lineart(
         self,
         image: np.ndarray,
         reference_image: np.ndarray,
@@ -465,6 +405,7 @@ class Model:
         negative_prompt: str,
         num_images: int,
         image_resolution: int,
+        preprocess_resolution: int,
         num_steps: int,
         guidance_scale: float,
         seed: int,
@@ -476,24 +417,41 @@ class Model:
         if num_images > MAX_NUM_IMAGES:
             raise ValueError
 
-        image = HWC3(image)
-        image = resize_image(image, resolution=image_resolution)
-        control_image = PIL.Image.fromarray(image)
-        self.load_controlnet_weight("ip2p")
+        # Preprocess for Canny
+        self.preprocessor.load("Canny")
+        canny_img = self.preprocessor(
+            image=image,
+            low_threshold=100,
+            high_threshold=200,
+            detect_resolution=image_resolution
+        )
+
+        # Preprocess for Lineart
+        self.preprocessor.load("Lineart")
+        lineart_img = self.preprocessor(
+            image=image,
+            image_resolution=image_resolution,
+            detect_resolution=preprocess_resolution
+        )
+
+        self.load_controlnet_weight("canny_lineart")  # Optional, handled inside run_pipe if not loaded
+
         results = self.run_pipe(
             prompt=self.get_prompt(prompt, additional_prompt),
             negative_prompt=negative_prompt,
-            control_image=control_image,
+            control_image=[canny_img, lineart_img],  # Dual input
             num_images=num_images,
             num_steps=num_steps,
             guidance_scale=guidance_scale,
             seed=seed,
             reference_image=reference_image,
-            task_name="ip2p",
+            task_name="canny_lineart"
         )
+
         if hasattr(self.preprocessor, "clear"):
             self.preprocessor.clear()
 
         torch.cuda.empty_cache()
         gc.collect()
-        return [control_image, *results]
+        return [canny_img, lineart_img, *results]
+

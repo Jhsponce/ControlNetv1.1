@@ -1,6 +1,5 @@
 ---
 title: ControlNet V1.1
-emoji: 📉
 colorFrom: yellow
 colorTo: green
 sdk: gradio
