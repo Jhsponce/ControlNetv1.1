@@ -144,6 +144,7 @@ cartoon, CGI, distorted straight lines, unrealistic textures, perfect surfaces, 
 - Lineart Coarse: Halftone effect sketch
 - Reference image: Style-enhancing photo (front-facing material texture) *Complex reference images will make the model hallucinate.
 
+##The preprocessed sketches can be found inside the '/sketches' folder.
 
 ### Parameters:
 
