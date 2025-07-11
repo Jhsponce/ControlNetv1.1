@@ -19,9 +19,12 @@ Check out the configuration reference at https://huggingface.co/docs/hub/spaces-
 
 ### Approach: Prompt Engineering (no fine-tuning)
 
-This project uses prompt engineering combined with sketch preprocessing to control output from Stable Diffusion v1.5, enhanced by ControlNet. Architectural fidelity was partially achieved by layering structure input (sketch), style guidance (reference image), and descriptive prompts. The models underperform when railroaded with detailed prompts, only MLSD yielded real-life like renditions.
+This project uses prompt engineering combined with sketch preprocessing to control output from Stable Diffusion v1.5, enhanced by ControlNet. Architectural fidelity was partially achieved by layering structure input (sketch), style guidance (reference image), and descriptive prompts. The models underperform when railroaded with detailed prompts.
 
 ### Model Components
+
+## Note: All models used are publicly hosted on Hugging Face Hub, and will be automatically downloaded on first run using `hf_hub_download`.
+
 
 - Base Model: `runwayml/stable-diffusion-v1-5`
 - ControlNet:  
@@ -68,8 +71,8 @@ Finally, auto-weighting via Python string logic enhances descriptors for materia
 
 During testing, the following values were carefully tuned:
 
-- ControlNet strength: 0.55–0.65
-- Guidance scale: 7.5–8.5
+
+- Guidance scale: 5.5–8.5
 - Seed: randomized
 - Steps: 20-30
 - Sketch resolution: 768×768
@@ -125,26 +128,31 @@ Major engineering work was completed to support reference image conditioning, in
 
 ### Prompt Pattern:
 
-A two-story house with volcanic stone tiles, horizontal wood siding, one narrow pond in front, left-facing window, dry concrete road, shot in daylight with natural shadows
+Photo of a two-story house, large glass windows, stone tiles façade, second floor wood cladding, taken at noon, shot on Canon DSLR, real estate listing photo, dry concrete, weathered stone, dirt on windows, overcast lighting, rain
+
 
 ### Addtional prompts:
 
-Best quality, extremely detailed, real life textures
+Best quality, extremely detailed, real life textures, roadside, sidewalk
 
 ### Negative Prompts:
-Extra windows, extra doors, distorted glass, water at the front
-
+cartoon, CGI, distorted straight lines, unrealistic textures, perfect surfaces, additional windows
 
 ### Recommended Preprocessing:
 
-- MLSD: Optional; use when straight segments dominate *photocopy filter effect
+- MLSD: Photocopy effect sketch
+- Lineart Coarse: Halftone effect sketch
+- Reference image: Style-enhancing photo (front-facing material texture)
+
+
 
 ### Parameters:
 
-- Guidance scale: 6.5–7.0
+- Guidance scale: 6.0–8.2
 - Steps: 20
-- Control strength: 0.45–0.6
 - Seed: randomized
+
+
 
 ## Setup Instructions
 

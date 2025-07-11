@@ -47,6 +47,7 @@ def create_demo(process):
                     )
             with gr.Column():
                 result = gr.Gallery(label="Output", show_label=False, columns=2, object_fit="scale-down")
+                
         inputs = [
             image,
             reference_image,

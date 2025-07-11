@@ -215,53 +215,76 @@ class Model:
         return pipe(**pipe_args).images
 
 
+import os
+import uuid
+import torch
+import gc
+from PIL import Image
 
-    @torch.inference_mode()
-    def process_canny(
-        self,
-        image: np.ndarray,
-        reference_image: np.ndarray,
-        prompt: str,
-        additional_prompt: str,
-        negative_prompt: str,
-        num_images: int,
-        image_resolution: int,
-        num_steps: int,
-        guidance_scale: float,
-        seed: int,
-        low_threshold: int,
-        high_threshold: int,
-    ) -> list[PIL.Image.Image]:
-        if image is None:
-            raise ValueError
-        if image_resolution > MAX_IMAGE_RESOLUTION:
-            raise ValueError
-        if num_images > MAX_NUM_IMAGES:
-            raise ValueError
+@torch.inference_mode()
+def process_canny(
+    self,
+    image: np.ndarray,
+    reference_image: np.ndarray,
+    prompt: str,
+    additional_prompt: str,
+    negative_prompt: str,
+    num_images: int,
+    image_resolution: int,
+    num_steps: int,
+    guidance_scale: float,
+    seed: int,
+    low_threshold: int,
+    high_threshold: int,
+) -> list[str]:  # returns file paths
+    if image is None:
+        raise ValueError("No input image provided.")
+    if image_resolution > MAX_IMAGE_RESOLUTION:
+        raise ValueError("Image resolution too large.")
+    if num_images > MAX_NUM_IMAGES:
+        raise ValueError("Too many images requested.")
 
-        self.preprocessor.load("Canny")
-        control_image = self.preprocessor(
-            image=image, low_threshold=low_threshold, high_threshold=high_threshold, detect_resolution=image_resolution
-        )
+    self.preprocessor.load("Canny")
+    control_image = self.preprocessor(
+        image=image,
+        low_threshold=low_threshold,
+        high_threshold=high_threshold,
+        detect_resolution=image_resolution
+    )
 
-        self.load_controlnet_weight("Canny")
-        results = self.run_pipe(
-            prompt=self.get_prompt(prompt, additional_prompt),
-            negative_prompt=negative_prompt,
-            control_image=control_image,
-            num_images=num_images,
-            num_steps=num_steps,
-            guidance_scale=guidance_scale,
-            seed=seed,
-            reference_image=reference_image,
-            task_name="Canny",
-        )
-        if hasattr(self.preprocessor, "clear"):
-            self.preprocessor.clear()
+    self.load_controlnet_weight("Canny")
+    generated_images = self.run_pipe(
+        prompt=self.get_prompt(prompt, additional_prompt),
+        negative_prompt=negative_prompt,
+        control_image=control_image,
+        num_images=num_images,
+        num_steps=num_steps,
+        guidance_scale=guidance_scale,
+        seed=seed,
+        reference_image=reference_image,
+        task_name="Canny",
+    )
 
-        torch.cuda.empty_cache()
-        gc.collect()
-        return [control_image, *results]
+    if hasattr(self.preprocessor, "clear"):
+        self.preprocessor.clear()
+
+    torch.cuda.empty_cache()
+    gc.collect()
+
+  
+    os.makedirs("output", exist_ok=True)
+    results = []
+  
+    control_path = os.path.join("output", f"control_{uuid.uuid4().hex}.png")
+    control_image.save(control_path)
+    results.append(control_path)
+
+    for i, img in enumerate(generated_images):
+        result_path = os.path.join("output", f"result_{i}_{uuid.uuid4().hex}.png")
+        img.save(result_path)
+        results.append(result_path)
+
+    return results
 
     @torch.inference_mode()
     def process_mlsd(
@@ -308,11 +331,24 @@ class Model:
             task_name="MLSD",
         )
         if hasattr(self.preprocessor, "clear"):
-            self.preprocessor.clear()
+        self.preprocessor.clear()
 
         torch.cuda.empty_cache()
         gc.collect()
-        return [control_image, *results]
+
+        os.makedirs("output", exist_ok=True)
+        results = []
+
+        control_path = os.path.join("output", f"control_{uuid.uuid4().hex}.png")
+        control_image.save(control_path)
+            results.append(control_path)
+
+        for i, img in enumerate(generated_images):
+            result_path = os.path.join("output", f"result_{i}_{uuid.uuid4().hex}.png")
+            img.save(result_path)
+            results.append(result_path)
+
+        return results
 
 
     @torch.inference_mode()
@@ -376,8 +412,22 @@ class Model:
         )
 
         if hasattr(self.preprocessor, "clear"):
-            self.preprocessor.clear()
+        self.preprocessor.clear()
 
         torch.cuda.empty_cache()
         gc.collect()
-        return [control_image, *results]
+
+    
+        os.makedirs("output", exist_ok=True)
+        results = []
+    
+        control_path = os.path.join("output", f"control_{uuid.uuid4().hex}.png")
+        control_image.save(control_path)
+        results.append(control_path)
+
+        for i, img in enumerate(generated_images):
+            result_path = os.path.join("output", f"result_{i}_{uuid.uuid4().hex}.png")
+            img.save(result_path)
+            results.append(result_path)
+
+        return results
