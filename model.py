@@ -341,7 +341,7 @@ def process_canny(
 
         control_path = os.path.join("output", f"control_{uuid.uuid4().hex}.png")
         control_image.save(control_path)
-            results.append(control_path)
+        results.append(control_path)
 
         for i, img in enumerate(generated_images):
             result_path = os.path.join("output", f"result_{i}_{uuid.uuid4().hex}.png")
