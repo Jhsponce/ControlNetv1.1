@@ -285,10 +285,6 @@ class Model:
 
         return results
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 50880238d2e4cb948051deb1af5f26e1cf0e0665
     @torch.inference_mode()
     def process_mlsd(
         self,
