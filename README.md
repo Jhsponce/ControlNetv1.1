@@ -3,7 +3,7 @@ title: ControlNet V1.1
 colorFrom: yellow
 colorTo: green
 sdk: gradio
-sdk_version: 5.12.0
+sdk_version: 5.36.2
 app_file: app.py
 pinned: false
 license: mit
