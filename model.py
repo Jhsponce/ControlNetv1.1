@@ -285,6 +285,7 @@ class Model:
 
         return results
 
+
     @torch.inference_mode()
     def process_mlsd(
         self,
@@ -301,7 +302,7 @@ class Model:
         seed: int,
         value_threshold: float,
         distance_threshold: float,
-    ) -> list[PIL.Image.Image]:
+    ) -> list[str]:  # returns file paths
         if image is None:
             raise ValueError
         if image_resolution > MAX_IMAGE_RESOLUTION:
@@ -318,7 +319,8 @@ class Model:
             thr_d=distance_threshold,
         )
         self.load_controlnet_weight("MLSD")
-        results = self.run_pipe(
+
+        generated_images = self.run_pipe(  # FIXED: define the missing variable
             prompt=self.get_prompt(prompt, additional_prompt),
             negative_prompt=negative_prompt,
             control_image=control_image,
@@ -329,6 +331,7 @@ class Model:
             reference_image=reference_image,
             task_name="MLSD",
         )
+
         if hasattr(self.preprocessor, "clear"):
             self.preprocessor.clear()
 
@@ -365,7 +368,7 @@ class Model:
         guidance_scale: float,
         seed: int,
         preprocessor_name: str,
-    ) -> list[PIL.Image.Image]:
+    ) -> list[str]:  # return file paths
         if image is None:
             raise ValueError
         if image_resolution > MAX_IMAGE_RESOLUTION:
@@ -378,7 +381,7 @@ class Model:
         if preprocessor_name in ["None", "None (anime)"]:
             image = HWC3(image)
             image = resize_image(image, resolution=image_resolution)
-            control_image = PIL.Image.fromarray(image)
+            control_image = Image.fromarray(image)
         elif preprocessor_name in ["Lineart", "Lineart coarse"]:
             coarse = "coarse" in preprocessor_name
             self.preprocessor.load("Lineart")
@@ -398,7 +401,7 @@ class Model:
 
         self.load_controlnet_weight(task_name)
 
-        results = self.run_pipe(
+        generated_images = self.run_pipe(  # FIXED: define variable
             prompt=self.get_prompt(prompt, additional_prompt),
             negative_prompt=negative_prompt,
             control_image=control_image,
@@ -416,10 +419,9 @@ class Model:
         torch.cuda.empty_cache()
         gc.collect()
 
-    
         os.makedirs("output", exist_ok=True)
         results = []
-    
+
         control_path = os.path.join("output", f"control_{uuid.uuid4().hex}.png")
         control_image.save(control_path)
         results.append(control_path)
