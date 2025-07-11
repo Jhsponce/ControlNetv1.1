@@ -143,7 +143,7 @@ cartoon, CGI, distorted straight lines, unrealistic textures, perfect surfaces, 
 - MLSD: Photocopy effect sketch
 - ![alt text](<sketchs/photocopy sketch.png>)
 - Lineart Coarse: Halftone effect sketch
-- ![alt text](<sketchs\halftone sketch.png>)
+- ![alt text](<sketchs/halftone sketch.png>)
 - Reference image: Style-enhancing photo (front-facing material texture) *Complex reference images will make the model hallucinate.
 
 ##The preprocessed sketches can be found inside the '/sketches' folder.
