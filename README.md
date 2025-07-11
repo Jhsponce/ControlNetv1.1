@@ -13,7 +13,7 @@ suggested_hardware: t4-medium
 Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
 
 
-# SD Sketch-to-Structure: Prompt Engineering Report
+# SD Sketch-to-Structure: Prompt Engineering
 
 ## Model and Methodology Details
 
