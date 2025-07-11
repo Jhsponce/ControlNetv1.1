@@ -40,7 +40,7 @@ def create_demo(process):
                     guidance_scale = gr.Slider(label="Guidance scale", minimum=0.1, maximum=30.0, value=9.0, step=0.1)
                     seed = gr.Slider(label="Seed", minimum=0, maximum=MAX_SEED, step=1, value=0)
                     randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
-                     a_prompt = gr.Textbox(label="Additional prompt", value="Best quality, extremely detailed, real life textures")
+                    a_prompt = gr.Textbox(label="Additional prompt", value="Best quality, extremely detailed, real life textures")
                     n_prompt = gr.Textbox(
                         label="Negative prompt",
                         value="Extra windows, extra doors, distorted glass, water at the front"
