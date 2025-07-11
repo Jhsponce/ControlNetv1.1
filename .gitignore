@@ -166,3 +166,14 @@ cython_debug/
 # additional models
 *.ckpt
 *.safetensors
+# Ignore common binary files
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.safetensors
+*.pt
+*.bin
+
+# Optional: ignore outputs folder entirely
+outputs/

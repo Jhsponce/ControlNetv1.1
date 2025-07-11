@@ -19,7 +19,7 @@ Check out the configuration reference at https://huggingface.co/docs/hub/spaces-
 
 ### Approach: Prompt Engineering (no fine-tuning)
 
-This project uses prompt engineering combined with sketch preprocessing to control output from Stable Diffusion v1.5, enhanced by ControlNet. Architectural fidelity was partially achieved by layering structure input (sketch), style guidance (reference image), and descriptive prompts. The models underperform when railroaded with detailed prompts.
+This project uses prompt engineering combined with sketch preprocessing to control output from Stable Diffusion v1.5, enhanced by ControlNet. Architectural fidelity was partially achieved by layering structure input (sketch), style guidance (reference image), and descriptive prompts. The models underperform when railroaded with detailed prompts. 
 
 ### Model Components
 
@@ -142,17 +142,21 @@ cartoon, CGI, distorted straight lines, unrealistic textures, perfect surfaces, 
 
 - MLSD: Photocopy effect sketch
 - Lineart Coarse: Halftone effect sketch
-- Reference image: Style-enhancing photo (front-facing material texture)
-
+- Reference image: Style-enhancing photo (front-facing material texture) *Complex reference images will make the model hallucinate.
 
 
 ### Parameters:
 
-- Guidance scale: 6.0–8.2
+- Guidance scale: 6.0–8.1
 - Steps: 20
-- Seed: randomized
+- Seed: randomized , 1079779503
 
+### Outputs
 
+![alt text](<outputs/image (2).png>) 
+![alt text](<outputs/image (3).png>) 
+![alt text](<outputs/image (4).png>) 
+![alt text](outputs/image.png)
 
 ## Setup Instructions
 
