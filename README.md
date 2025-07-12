@@ -140,13 +140,13 @@ cartoon, CGI, distorted straight lines, unrealistic textures, perfect surfaces, 
 
 ### Recommended Preprocessing:
 
-- MLSD: Photocopy effect sketch
+- For MLSD: Photocopy effect sketch
 - ![alt text](<sketchs/photocopy sketch.png>)
-- Lineart Coarse: Halftone effect sketch
+- For Lineart Coarse: Halftone effect sketch
 - ![alt text](<sketchs/halftone sketch.png>)
 - Reference image: Style-enhancing photo (front-facing material texture) *Complex reference images will make the model hallucinate.
 
-##The preprocessed sketches can be found inside the '/sketches' folder.
+## The preprocessed sketches can be found inside the '/sketches' folder.
 
 ### Parameters:
 
@@ -163,22 +163,48 @@ cartoon, CGI, distorted straight lines, unrealistic textures, perfect surfaces, 
 
 ## Setup Instructions
 
-```bash
+```
 git clone git clone https://huggingface.co/spaces/Scythd/Sketch
 pip install -r requirements.txt
 python app.py
+```
 
-Or launch from: https://huggingface.co/spaces/Scythd/Sketch
+GPU recommended: SDXL-based models require at least 12–16 GB VRAM for smooth generation.
 
-Select "Duplicate this Space"
+Once started, the app will be accessible in your browser at:
 
-For a direct run: GPUs must be enabled on request. Reference conditioning only functions on CUDA-enabled hardware.
+```
+http://127.0.0.1:7860
+```
+If needed, you can change the port in app.py:
+
+```
+demo.launch(server_port=7860)
+```
+
+
+Launch from browser at: 
+
+```
+https://huggingface.co/spaces/Scythd/Sketch
+```
+Steps:
+
+- Select "Duplicate this Space"
+
+- Rename the Space (optional).
+
+- Select GPU hardware (e.g., T4 or A10G) — paid plan required.
+
+- Click Create Space and wait for it to build.
+
+No local setup required.
+
+Note: For a direct run from the base Hugging Face Space, the GPUs must be activated on request.
 
 GitHub Link
+
+```
 https://github.com/Jhsponce/ControlNetv1.1.git
-
-
-
-
-
+```
 
