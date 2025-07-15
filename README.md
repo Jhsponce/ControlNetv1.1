@@ -164,7 +164,7 @@ cartoon, CGI, distorted straight lines, unrealistic textures, perfect surfaces, 
 ## Setup Instructions
 
 ```
-git clone git clone https://huggingface.co/spaces/Scythd/Sketch
+git clone git clone https://github.com/Jhsponce/ControlNetv1.1.git
 pip install -r requirements.txt
 python app.py
 ```
