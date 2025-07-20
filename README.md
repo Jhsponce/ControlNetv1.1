@@ -17,7 +17,7 @@ Check out the configuration reference at https://huggingface.co/docs/hub/spaces-
 
 ## Model and Methodology Details
 
-### Approach: Prompt Engineering (no fine-tuning)
+### Approach: Prompt Engineering
 
 This project uses prompt engineering combined with sketch preprocessing to control output from Stable Diffusion v1.5, enhanced by ControlNet. Architectural fidelity was partially achieved by layering structure input (sketch), style guidance (reference image), and descriptive prompts. The models underperform when railroaded with detailed prompts. 
 
